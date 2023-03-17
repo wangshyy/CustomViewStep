@@ -24,15 +24,14 @@ class StepProgressView(context: Context?, attrs: AttributeSet?, defStyleAttr: In
     var arcPaintStyle = Paint.Style.STROKE //弧线画笔样式，stroke:填充
     var isAntiAlias = true  //是否抗锯齿
 
+
     private val centerPoint: Pair<Float, Float>
         get() = Pair((width / 2).toFloat(), height.toFloat() / 2)   //中心点
 
     var arcColorArrayList = intArrayOf()    //弧形渐变颜色列表,需传参
     private val arcColorStartPlaceList  //每个颜色值的起始位置,需传参
         get() = floatArrayOf(
-            0F,
-            ((endPercent * 0.01) / 2 / 2).toFloat(),
-            (endPercent * 0.01 / 2).toFloat()
+            0F, (endPercent * 0.01 / 2).toFloat(), (endPercent * 0.01 / 2).toFloat()
         )
     private val startAndEndCircleR: Float
         get() = arcWidth / 2  //首尾圆半径，为弧线宽度的一半，达到填充效果
@@ -45,14 +44,14 @@ class StepProgressView(context: Context?, attrs: AttributeSet?, defStyleAttr: In
 
     private fun drawStepProgress(canvas: Canvas?) {
 
+        canvas?.translate(0F, arcWidth / 2)
+        canvas?.save()//把当前的画布的状态进行保存，然后放入Canvas状态栈中
         //画弧线
         val arcPaint = Paint()
         arcPaint.color = arcPaintColor  //弧线画笔颜色
         arcPaint.style = arcPaintStyle  //弧线画笔样式
         arcPaint.strokeWidth = arcWidth    //画笔宽度
         arcPaint.isAntiAlias = isAntiAlias    //抗锯齿
-
-
         //渐变色,扫描渲染（梯度渲染）
         val sweepGradient = SweepGradient(
             centerPoint.first,
@@ -78,17 +77,26 @@ class StepProgressView(context: Context?, attrs: AttributeSet?, defStyleAttr: In
             width.toFloat() - arcWidth / 2,
             height.toFloat() - arcWidth / 2
         )    //画布矩形框大小
-        canvas?.drawArc(rectFArc, 180F, 180F, false, arcPaint)    //画弧线
+        canvas?.drawArc(rectFArc, 179F, 181F, false, arcPaint)    //画弧线
 
-        //画0点圆
-        val circlePaintStart = Paint()
-        circlePaintStart.color = arcColorArrayList[0]
-        circlePaintStart.isAntiAlias = true
-        canvas?.drawCircle(
-            arcWidth / 2,
+        //画0点扇形
+        val rectFFanStart = RectF(
+            0F,
             (height / 2).toFloat(),
-            startAndEndCircleR,
-            circlePaintStart
+            arcWidth,
+            (height / 2).toFloat() + arcWidth,
+        )
+        val fanPaintStart = Paint()
+        fanPaintStart.color = arcColorArrayList[0]
+        fanPaintStart.isAntiAlias = true
+        resetCanvas(canvas)
+        canvas?.translate(0F, -arcWidth / 2)
+        canvas?.drawArc(
+            rectFFanStart,
+            0F,
+            180F,
+            false,
+            fanPaintStart
         )
 
 //        //中心点
@@ -102,16 +110,84 @@ class StepProgressView(context: Context?, attrs: AttributeSet?, defStyleAttr: In
 //            circlePaintStart
 //        )
 
-        //画终点圆
-        val circlePaintEnd = Paint()
-        circlePaintEnd.color = arcColorArrayList.last()
-        circlePaintEnd.isAntiAlias = true
-        canvas?.drawCircle(
-            width - arcWidth / 2,
+        //画终点半圆
+        val rectFFanEnd = RectF(
+            width - arcWidth,
             (height / 2).toFloat(),
+            width.toFloat(),
+            (height / 2).toFloat() + arcWidth,
+        )
+        val fanPaintEnd = Paint()
+        fanPaintEnd.color = arcColorArrayList.last()
+        fanPaintEnd.isAntiAlias = true
+        canvas?.drawArc(
+            rectFFanEnd,
+            0F,
+            180F,
+            false,
+            fanPaintEnd
+        )
+
+        //画阴影弧线
+        val arcPaintShadow = Paint()
+        arcPaintShadow.style = arcPaintStyle  //弧线画笔样式
+        arcPaintShadow.strokeWidth = arcWidth    //画笔宽度
+        arcPaintShadow.isAntiAlias = isAntiAlias    //抗锯齿
+        //渐变色,扫描渲染（梯度渲染）
+        val sweepGradientShadow = SweepGradient(
+            centerPoint.first,
+            centerPoint.second,   //（cx,cy）中心
+            intArrayOf(
+                Color.parseColor("#ffffff"),
+                Color.parseColor("#F3F5F8"),
+                Color.parseColor("#ffffff")
+            ),
+            floatArrayOf(0F, .1F, .5F)
+        )
+        //渐变矩阵旋转（渐变起点默认是0°，可以旋转至需要的起点角度）
+        val matrixShadow = Matrix()
+        matrixShadow.setRotate(
+            -180F,
+            centerPoint.first,
+            centerPoint.second,
+        ) //degrees:角度，（px,py）圆心
+        sweepGradientShadow.setLocalMatrix(matrixShadow)
+        arcPaintShadow.shader = sweepGradientShadow
+        resetCanvas(canvas)
+        canvas?.translate(arcWidth, arcWidth)
+        canvas?.scale(
+            (centerPoint.first - arcWidth) / centerPoint.first,
+            (centerPoint.second - arcWidth) / centerPoint.second
+        )
+        canvas?.drawArc(rectFArc, 179F, 181F, false, arcPaintShadow)
+
+        //跟随进度的外圆
+        val progressCirclePaintOut = Paint()
+        progressCirclePaintOut.color = Color.WHITE
+        progressCirclePaintOut.isAntiAlias = true
+        canvas?.restore()
+        canvas?.drawCircle(
+            width.toFloat() / 2,
+            arcWidth / 2,
+            arcWidth,
+            progressCirclePaintOut
+        )
+
+        //跟随进度的内圆
+        val progressCirclePaintIn = Paint()
+        progressCirclePaintIn.color = arcColorArrayList[0]
+        progressCirclePaintIn.isAntiAlias = true
+        canvas?.drawCircle(
+            width.toFloat() / 2,
+            arcWidth / 2,
             startAndEndCircleR,
-            circlePaintEnd
+            progressCirclePaintIn
         )
     }
 
+    //重置画笔
+    private fun resetCanvas(canvas: Canvas?){
+        canvas?.restore()//重置画笔，获取上一次保存的画笔状态
+        canvas?.save()//把当前的画布的状态进行保存，然后放入Canvas状态栈中
+    }
 }

@@ -12,8 +12,8 @@ class MainActivity : AppCompatActivity() {
         stepProgressView.apply {
             arcWidth = 60F
             arcColorArrayList = intArrayOf(
-                Color.parseColor("#13CF8D"),
-                Color.parseColor("#D6EE02"),
+                Color.parseColor("#0063FF"),
+                Color.parseColor("#30F9FE"),
                 Color.parseColor("#F3F5F8")
             )
             endPercent = 50
