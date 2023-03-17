@@ -10,13 +10,18 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         var stepProgressView = findViewById<StepProgressView>(R.id.view)
         stepProgressView.apply {
-            arcWidth = 60F
+            arcPaintWidth = 60F
+            endPercent = 50
             arcColorArrayList = intArrayOf(
                 Color.parseColor("#0063FF"),
                 Color.parseColor("#30F9FE"),
                 Color.parseColor("#F3F5F8")
             )
-            endPercent = 50
+            arcColorArrayListShadow = intArrayOf(
+                Color.parseColor("#ffffff"),
+                Color.parseColor("#F3F5F8"),
+                Color.parseColor("#ffffff")
+            )
         }
     }
 }
