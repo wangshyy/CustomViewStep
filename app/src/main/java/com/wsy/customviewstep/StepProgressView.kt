@@ -28,6 +28,10 @@ class StepProgressView(context: Context?, attrs: AttributeSet?, defStyleAttr: In
     var arcPaintStyle = Paint.Style.STROKE //弧线画笔样式，stroke:填充
     var isAntiAlias = true  //是否抗锯齿
 
+    private
+    val centerPoint: Pair<Float, Float>
+        get() = Pair((width / 2).toFloat(), height.toFloat() / 2)   //中心点
+
     /**
      * 公式计算，有误差
      */
@@ -39,13 +43,17 @@ class StepProgressView(context: Context?, attrs: AttributeSet?, defStyleAttr: In
 
     private val concentricCircleCenterP: Pair<Double, Double>
         get() = Pair(
-            (1 - cos(toRadians(((endPercent / 100 * 180).toDouble())))) * (width - arcPaintWidth) / 2 + arcPaintWidth / 2,
-            width / 2 - sin(toRadians(((endPercent / 100 * 180).toDouble()))) * (width - arcPaintWidth) / 2
+            (when (endPercent) {
+                in 0..90 -> {
+                    centerPoint.first - (width - arcPaintWidth) / 2 * cos(toRadians((180 * endPercent / 100).toDouble()))
+                }
+                else -> {
+                    centerPoint.first + (width - arcPaintWidth) / 2 * cos(toRadians((180 * endPercent / 100).toDouble()))
+                }
+            }),
+            centerPoint.second - (width - arcPaintWidth) / 2 * sin(toRadians((180 * endPercent / 100).toDouble()))
         )
 
-    private
-    val centerPoint: Pair<Float, Float>
-        get() = Pair((width / 2).toFloat(), height.toFloat() / 2)   //中心点
 
     var arcColorArrayList = intArrayOf()    //弧形渐变颜色列表,需传参
     var arcColorArrayListShadow = intArrayOf()    //阴影弧形渐变颜色列表,需传参
