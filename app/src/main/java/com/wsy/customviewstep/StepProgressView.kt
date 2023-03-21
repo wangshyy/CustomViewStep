@@ -32,15 +32,7 @@ class StepProgressView(context: Context?, attrs: AttributeSet?, defStyleAttr: In
     val centerPoint: Pair<Float, Float>
         get() = Pair((width / 2).toFloat(), height.toFloat() / 2)   //中心点
 
-    /**
-     * 公式计算，有误差
-     */
-//    private val concentricCircleCenterP
-//        get() = Pair(
-//            (width - arcPaintWidth) * endPercent / 100 + arcPaintWidth / 2,
-//            width/2-sqrt((width - arcPaintWidth) * (width - arcPaintWidth) / 4 - ((width - arcPaintWidth) / 2 - (width - arcPaintWidth) * endPercent / 100) * ((width - arcPaintWidth) / 2 - (width - arcPaintWidth) * endPercent / 100))
-//        ) //跟随进度的同心圆的圆心
-
+    //跟随进度的同心圆的圆心
     private val concentricCircleCenterP: Pair<Double, Double>
         get() = Pair(
             (when (endPercent) {
